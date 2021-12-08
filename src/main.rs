@@ -1,10 +1,20 @@
 use comrak::{format_commonmark, parse_document, Arena, ComrakOptions, ComrakRenderOptions};
 use std::io::{self, BufRead};
 use std::process;
+use structopt::StructOpt;
+
+// CLI arguments
+#[derive(StructOpt)]
+struct Options {
+    /// Max line width
+    #[structopt(long, short = "w", default_value = "80")]
+    width: usize,
+}
 
 fn main() {
+    let args = Options::from_args();
     let input = get_input();
-    let output = format_input(input);
+    let output = format_input(input, &args);
     println!(
         "Formatted output:\n\
         -----------------\n\n{}",
@@ -28,13 +38,10 @@ fn get_input() -> String {
 
     while let Some(raw_line) = raw_lines.next() {
         // Trim whitespace from the input line, exiting if we couldn't parse it for some reason
-        let line: String = raw_line
-            .unwrap_or_else(|err| {
-                eprintln!("Problem parsing input: {}", err);
-                process::exit(1);
-            })
-            .trim()
-            .into();
+        let line: String = raw_line.unwrap_or_else(|err| {
+            eprintln!("Problem parsing input: {}", err);
+            process::exit(1);
+        });
 
         // If the line is empty, check if the last line was too. If so, break out of the loop (and
         // remove the previous line which we know to be blank)
@@ -52,11 +59,11 @@ fn get_input() -> String {
 }
 
 /// Takes the raw markdown input from the user and reformats it
-fn format_input(input: String) -> String {
+fn format_input(input: String, args: &Options) -> String {
     // Formatting options. Max line width is 80 characters
     let options = ComrakOptions {
         render: ComrakRenderOptions {
-            width: 80,
+            width: args.width,
             ..ComrakRenderOptions::default()
         },
         ..ComrakOptions::default()
