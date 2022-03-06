@@ -1,5 +1,5 @@
 [package]
-name = "pretty_commit"
+name = "pretty"
 version = "0.1.0"
 edition = "2018"
 
