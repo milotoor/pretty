@@ -5,4 +5,5 @@ edition = "2018"
 
 [dependencies]
 comrak = "0.12"
+sqlformat = "0.1.8"
 structopt = "0.3.13"
