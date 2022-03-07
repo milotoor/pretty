@@ -66,8 +66,8 @@ impl Options {
             process::exit(1);
         });
 
-        // Convert to String type
-        String::from_utf8(output).unwrap()
+        // Convert to String type and drop the blank extra line
+        String::from_utf8(output).unwrap().trim().to_owned()
     }
 
     /// Reformats a row SQL string
