@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-comrak = "0.12"
-sqlformat = "0.1.8"
+comrak = "0.14"
+sqlformat = "0.2.0"
 structopt = "0.3.13"
