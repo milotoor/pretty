@@ -1,5 +1,4 @@
-pretty
--------------
+## pretty
 
 pretty is a basic Command Line Interface application for formatting raw text into pretty commit messages or SQL. In particular, the tool takes input from the user, parses it as [GitHub-Flavored Markdown](https://docs.github.com/en/github/writing-on-github/getting-started-with-writing-and-formatting-on-github/about-writing-and-formatting-on-github) and then reformats the message by wrapping lines at the parameterized maximum line length (default is 80 characters).
 
@@ -28,22 +27,23 @@ OPTIONS:
     -w, --width <width>    Max line width [default: 80]
 
 $ cargo run
-    Finished dev [unoptimized + debuginfo] target(s) in 0.80s
+    Finished dev [unoptimized + debuginfo] target(s) in 0.05s
      Running `target/debug/pretty`
+
 Enter a GitHub Flavored Markdown string to be reformatted.
-- The string must not contain two (or more) consecutive newlines
-- See https://github.github.com/gfm/ for the GFM spec 
-- Press the Return key twice to indicate when the input has terminated.
+  - See https://github.github.com/gfm/ for the GFM spec
+  - The string must not contain two (or more) consecutive newlines
+  - Press the Return key thrice to indicate when the input has terminated.
 
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec posuere enim. Fusce dignissim ultrices ultricies. Donec vel dui commodo, hendrerit sapien eu, volutpat libero. Quisque at dui metus.
 
 
 Formatted output:
------------------
-
+--------------------------------------------------------------------------------
 Lorem ipsum dolor sit amet, consectetur adipiscing elit. Proin nec posuere enim.
 Fusce dignissim ultrices ultricies. Donec vel dui commodo, hendrerit sapien eu,
 volutpat libero. Quisque at dui metus.
+--------------------------------------------------------------------------------
 ```
 
 ## Why Rust?
