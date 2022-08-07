@@ -1,6 +1,7 @@
 use comrak::{format_commonmark, parse_document, Arena, ComrakOptions, ComrakRenderOptions};
 use sqlformat::{format, FormatOptions, QueryParams};
 use std::io::{self, BufRead};
+use std::iter::repeat;
 use std::process;
 use std::str::FromStr;
 use structopt::StructOpt;
@@ -115,13 +116,8 @@ impl Options {
             Some(InputKind::Sql) => self.format_sql(input),
         };
 
-        println!(
-            "Formatted output:\n\
-             -----------------\n\
-            {}\n\
-            -----------------",
-            output
-        );
+        let delimeter: String = repeat('-').take(self.width).collect();
+        println!("Formatted output:\n{}\n{}\n{}", delimeter, output, delimeter);
     }
 
     fn print_introduction(&self) {
