@@ -83,8 +83,7 @@ impl Options {
     fn get_input(&self) -> String {
         self.print_introduction();
 
-        let stdin = io::stdin();
-        let mut raw_lines = stdin.lock().lines();
+        let mut raw_lines = io::stdin().lock().lines();
         let mut parsed_lines: Vec<String> = vec![];
 
         while let Some(raw_line) = raw_lines.next() {
