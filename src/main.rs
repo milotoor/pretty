@@ -1,3 +1,5 @@
+use clipboard::ClipboardProvider;
+use clipboard::ClipboardContext;
 use comrak::{format_commonmark, parse_document, Arena, ComrakOptions, ComrakRenderOptions};
 use sqlformat::{format, FormatOptions, QueryParams};
 use std::io::{self, BufRead};
@@ -29,9 +31,14 @@ impl FromStr for InputKind {
 // CLI arguments
 #[derive(StructOpt)]
 struct Options {
+    /// Whether to copy to the clipboard
+    #[structopt(long, short = "c")]
+    copy: bool,
+
     /// Type of input
     #[structopt(long, short = "k")]
     kind: Option<InputKind>,
+
     /// Max line width
     #[structopt(long, short = "w", default_value = "80")]
     width: usize,
@@ -115,8 +122,16 @@ impl Options {
             Some(InputKind::Sql) => self.format_sql(input),
         };
 
-        let delimeter: String = repeat('-').take(self.width).collect();
-        println!("Formatted output:\n{}\n{}\n{}", delimeter, output, delimeter);
+        if self.copy {
+            // Copy the output to the clipboard
+            let mut clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
+            clipboard.set_contents(output).unwrap();
+            println!("✅ Output copied to clipboard");
+        } else {
+          let delimeter: String = repeat('-').take(self.width).collect();
+          println!("Formatted output:\n{}\n{}\n{}", delimeter, output, delimeter);
+        }
+
     }
 
     fn print_introduction(&self) {
