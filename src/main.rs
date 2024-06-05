@@ -28,12 +28,57 @@ impl FromStr for InputKind {
     }
 }
 
+enum InputSource {
+    Stdin,
+    Clipboard,
+}
+
+impl FromStr for InputSource {
+    type Err = io::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "stdin" => Ok(InputSource::Stdin),
+            "clipboard" => Ok(InputSource::Clipboard),
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("Invalid argument {}", s),
+            )),
+        }
+    }
+}
+
+enum OutputDestination {
+    Stdout,
+    Clipboard,
+}
+
+impl FromStr for OutputDestination {
+    type Err = io::Error;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s {
+            "stdout" => Ok(OutputDestination::Stdout),
+            "clipboard" => Ok(OutputDestination::Clipboard),
+            _ => Err(io::Error::new(
+                io::ErrorKind::InvalidInput,
+                format!("Invalid argument {}", s),
+            )),
+        }
+    }
+}
+
+
 // CLI arguments
 #[derive(StructOpt)]
 struct Options {
-    /// Whether to copy to the clipboard
-    #[structopt(long, short = "c")]
-    copy: bool,
+    /// The input source
+    #[structopt(long, short = "i", default_value = "stdin")]
+    input_src: InputSource,
+
+    /// The output destination
+    #[structopt(long, short = "o", default_value = "clipboard")]
+    output_dest: OutputDestination,
 
     /// Type of input
     #[structopt(long, short = "k")]
@@ -85,9 +130,18 @@ impl Options {
         format(&input, &params, options)
     }
 
+    /// Gets the contents of the clipboard
+    fn get_input_from_clipboard(&self) -> String {
+        let mut clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
+        clipboard.get_contents().unwrap_or_else(|err| {
+            eprintln!("Problem getting clipboard contents: {}", err);
+            process::exit(1);
+        })
+    }
+
     /// Prints a prompt for the user and then collects their multiline input into a single String.
     /// The input is only terminated when consecutive empty lines are enterred.
-    fn get_input(&self) -> String {
+    fn get_input_from_stdin(&self) -> String {
         self.print_introduction();
 
         let mut raw_lines = io::stdin().lock().lines();
@@ -116,22 +170,29 @@ impl Options {
     }
 
     pub fn make_pretty(&self) {
-        let input = self.get_input();
+        let input = match self.input_src {
+            InputSource::Stdin => self.get_input_from_stdin(),
+            InputSource::Clipboard => self.get_input_from_clipboard(),
+        };
+
         let output = match self.kind {
             Some(InputKind::Markdown) | None => self.format_markdown(input),
             Some(InputKind::Sql) => self.format_sql(input),
         };
 
-        if self.copy {
-            // Copy the output to the clipboard
-            let mut clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
-            clipboard.set_contents(output).unwrap();
-            println!("✅ Output copied to clipboard");
-        } else {
-          let delimeter: String = repeat('-').take(self.width).collect();
-          println!("Formatted output:\n{}\n{}\n{}", delimeter, output, delimeter);
-        }
+        match self.output_dest {
+            OutputDestination::Stdout => {
+              let delimeter: String = repeat('-').take(self.width).collect();
+              println!("Formatted output:\n{}\n{}\n{}", delimeter, output, delimeter);
+            },
 
+            OutputDestination::Clipboard => {
+              // Copy the output to the clipboard
+              let mut clipboard: ClipboardContext = ClipboardProvider::new().unwrap();
+              clipboard.set_contents(output).unwrap();
+              println!("✅ Output copied to clipboard");
+            },
+        }
     }
 
     fn print_introduction(&self) {
