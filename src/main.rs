@@ -1,3 +1,4 @@
+use clap::Parser;
 use clipboard::ClipboardProvider;
 use clipboard::ClipboardContext;
 use comrak::{format_commonmark, parse_document, Arena, ComrakOptions, ComrakRenderOptions};
@@ -5,87 +6,42 @@ use sqlformat::{format, FormatOptions, QueryParams};
 use std::io::{self, BufRead};
 use std::iter::repeat;
 use std::process;
-use std::str::FromStr;
-use structopt::StructOpt;
 
+#[derive(clap::ValueEnum, Debug, Clone)]
 enum InputKind {
     Markdown,
     Sql,
 }
 
-impl FromStr for InputKind {
-    type Err = io::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "md" => Ok(InputKind::Markdown),
-            "sql" => Ok(InputKind::Sql),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid argument {}", s),
-            )),
-        }
-    }
-}
-
+#[derive(clap::ValueEnum, Debug, Clone)]
 enum InputSource {
     Stdin,
     Clipboard,
 }
 
-impl FromStr for InputSource {
-    type Err = io::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "stdin" => Ok(InputSource::Stdin),
-            "clipboard" => Ok(InputSource::Clipboard),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid argument {}", s),
-            )),
-        }
-    }
-}
-
+#[derive(clap::ValueEnum, Debug, Clone)]
 enum OutputDestination {
     Stdout,
     Clipboard,
 }
 
-impl FromStr for OutputDestination {
-    type Err = io::Error;
-
-    fn from_str(s: &str) -> Result<Self, Self::Err> {
-        match s {
-            "stdout" => Ok(OutputDestination::Stdout),
-            "clipboard" => Ok(OutputDestination::Clipboard),
-            _ => Err(io::Error::new(
-                io::ErrorKind::InvalidInput,
-                format!("Invalid argument {}", s),
-            )),
-        }
-    }
-}
-
-
-// CLI arguments
-#[derive(StructOpt)]
+#[derive(Parser, Debug)]
+#[command(version, about, long_about = None)]
 struct Options {
     /// The input source
-    #[structopt(long, short = "i", default_value = "stdin")]
+    #[arg(short, long, default_value = "stdin")]
     input_src: InputSource,
 
     /// The output destination
-    #[structopt(long, short = "o", default_value = "clipboard")]
+    #[arg(short, long, default_value = "clipboard")]
     output_dest: OutputDestination,
 
     /// Type of input
-    #[structopt(long, short = "k")]
-    kind: Option<InputKind>,
+    #[arg(short, long, default_value = "markdown")]
+    kind: InputKind,
 
     /// Max line width
-    #[structopt(long, short = "w", default_value = "80")]
+    #[arg(short, long, default_value = "80")]
     width: usize,
 }
 
@@ -176,8 +132,8 @@ impl Options {
         };
 
         let output = match self.kind {
-            Some(InputKind::Markdown) | None => self.format_markdown(input),
-            Some(InputKind::Sql) => self.format_sql(input),
+            InputKind::Markdown => self.format_markdown(input),
+            InputKind::Sql => self.format_sql(input),
         };
 
         match self.output_dest {
@@ -197,8 +153,8 @@ impl Options {
 
     fn print_introduction(&self) {
         let intro = match self.kind {
-            Some(InputKind::Markdown) | None => Self::MD_INTRO,
-            Some(InputKind::Sql) => Self::SQL_INTRO,
+            InputKind::Markdown => Self::MD_INTRO,
+            InputKind::Sql => Self::SQL_INTRO,
         };
 
         println!("\n{}", intro);
@@ -208,6 +164,6 @@ impl Options {
 }
 
 fn main() {
-    let options = Options::from_args();
+    let options = Options::parse();
     options.make_pretty();
 }

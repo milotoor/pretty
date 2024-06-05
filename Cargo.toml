@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+clap = { version = "4.5.4", features = ["derive"] }
 clipboard = "0.5.0"
 comrak = "0.14"
 sqlformat = "0.2.0"
-structopt = "0.3.13"
