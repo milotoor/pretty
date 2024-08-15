@@ -31,7 +31,7 @@ pub fn render_links(markdown: String, links: &[String]) -> String {
         .collect::<Vec<String>>()
         .join("\n");
 
-    format!("{}\n\n{}", markdown, link_content)
+    format!("{}\n\n## References\n\n{}", markdown, link_content)
 }
 
 #[cfg(test)]
