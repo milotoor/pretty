@@ -8,7 +8,7 @@ use crate::{
 };
 
 /// Reformats a raw markdown string
-pub fn format_markdown(input: String, width: usize) -> String {
+fn format_markdown(input: impl Into<String>, width: usize) -> String {
     // Formatting options. Max line width is 80 characters
     let options = ComrakOptions {
         render: ComrakRenderOptions {
@@ -22,7 +22,7 @@ pub fn format_markdown(input: String, width: usize) -> String {
     // its lifetime. An Arena is basically a fast mechanism for allocating numerous values of the
     // same type.
     let arena = Arena::new();
-    let root = parse_document(&arena, &input, &options);
+    let root = parse_document(&arena, &input.into(), &options);
 
     // Reformat the AST into a vector of UTF-8 charcodes
     let mut output = vec![];
@@ -31,12 +31,18 @@ pub fn format_markdown(input: String, width: usize) -> String {
         process::exit(1);
     });
 
-    // Convert to String type and drop the blank extra line
-    String::from_utf8(output).unwrap().trim().to_owned()
+    // Convert to String type and drop the blank extra line and replace escaped brackets with
+    // actual brackets
+    String::from_utf8(output)
+        .unwrap()
+        .trim()
+        .to_owned()
+        .replace(r"\[", "[")
+        .replace(r"\]", "]")
 }
 
 /// Reformats a raw SQL string
-pub fn format_sql(input: String) -> String {
+fn format_sql(input: String) -> String {
     let params = QueryParams::default();
     let options = FormatOptions::default();
     format(&input, &params, options)
@@ -49,5 +55,18 @@ pub fn format_output(options: &Options, input: String, links: Vec<String>) -> St
             render_links(markdown, &links)
         }
         InputKind::Sql => format_sql(input),
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_link_escaping() {
+        let input = "Check out this link[1].";
+        let expected_output = "Check out this link[1].";
+        let formatted = format_markdown(input, 80);
+        assert_eq!(formatted, expected_output);
     }
 }
