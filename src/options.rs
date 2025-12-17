@@ -36,4 +36,8 @@ pub struct Options {
     /// Max line width
     #[arg(short, long, default_value = "80")]
     pub width: usize,
+
+    /// Keep bold and italic markdown formatting (by default, these are stripped)
+    #[arg(long, default_value = "false")]
+    pub keep_emphasis: bool,
 }
